@@ -45,9 +45,6 @@ from . import config as cfg
 from .cmap import from_arrays, reindex_cells
 from .frame import to_deviation
 
-sys.path.insert(0, str(cfg.ROOT / "src/imperial/dartbrep"))
-
-
 def _sample_curve_arclength(edge, n: int, n_fine: int = 400) -> np.ndarray:
     """(n, 3) points along the edge, uniformly spaced in *arc length* (not
     the curve's own parametrization, which can bunch samples arbitrarily --
@@ -93,7 +90,7 @@ def extract(step_path: str) -> dict:
     from OCC.Core.TopExp import TopExp_Explorer
     from OCC.Core.TopoDS import topods
 
-    from extract_darts import extract_map
+    from .extract_darts import extract_map
 
     from .normalize import read_step_normalized
 
