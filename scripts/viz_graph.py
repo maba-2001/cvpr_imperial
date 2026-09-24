@@ -4,7 +4,7 @@ which plots the *embedded* (3D) geometry. Useful for seeing multi-edges,
 self-loops (full circles) and bigon/short faces directly, independent of how
 good the geometry model's placement is.
 
-    python -m cvpr_imperial.viz_graph --n 6
+    python -m cvpr_imperial.scripts.viz_graph --n 6
 """
 
 from __future__ import annotations
@@ -19,8 +19,8 @@ import numpy as np
 import torch
 from scipy.spatial import ConvexHull
 
-from . import config as cfg
-from .topology_model import CodeTransformer, sample
+from .. import config as cfg
+from ..topology.model import CodeTransformer, sample
 
 
 def to_multigraph(m) -> nx.MultiGraph:

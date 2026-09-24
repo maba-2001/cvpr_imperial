@@ -19,8 +19,8 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-from . import code as C
-from . import config as cfg
+from ..topology import grammar as C
+from .. import config as cfg
 from .cmap import from_arrays, reindex_cells
 
 
@@ -147,7 +147,7 @@ class CodeDataset(Dataset):
         cache = cfg.RUN_DIR / f"codes_{split}.npz"
         if not cache.exists():
             raise FileNotFoundError(
-                f"{cache} missing -- run `python -m cvpr_imperial.data --build {split}`")
+                f"{cache} missing -- run `python -m cvpr_imperial.data.dataset --build {split}`")
         blob = np.load(cache, allow_pickle=True)
         built = bool(blob["vertex_block"]) if "vertex_block" in blob else False
         if built != (cfg.VERTEX_MODE is not None):
@@ -179,7 +179,7 @@ class CodeDataset(Dataset):
 def collate(batch: list[dict]) -> dict:
     """Pad, and build the per-step supervision, pointer masks, and (with a
     vertex block) each vertex token's coordinates and structural slot."""
-    from .topology_model import targets_from_tokens, vertex_slots
+    from ..topology.model import targets_from_tokens, vertex_slots
 
     B = len(batch)
     n = max(len(b["kinds"]) for b in batch)

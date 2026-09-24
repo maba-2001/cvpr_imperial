@@ -1,7 +1,7 @@
 """Train the map-conditioned geometry flow.
 
-    python -m cvpr_imperial.extract --n 20000        # build the geometry cache
-    python -m cvpr_imperial.train_geometry --steps 8000 --batch 16
+    python -m cvpr_imperial.data.extract --n 20000        # build the geometry cache
+    python -m cvpr_imperial.scripts.train_geometry --steps 8000 --batch 16
 
 Batched across maps of different sizes via `geometry_model.map_tensors_batch`
 (the PyG disjoint-union trick) -- message passing needs no padding at all,
@@ -17,10 +17,10 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-from . import config as cfg
-from .cmap import from_arrays
-from .geometry_model import DIMS, GeometryFlow, RANKS, compute_scales
-from .geometry_vae import load_vaes
+from .. import config as cfg
+from ..data.cmap import from_arrays
+from ..geometry.flow import DIMS, GeometryFlow, RANKS, compute_scales
+from ..geometry.vae import load_vaes
 
 
 class GeomDataset(Dataset):

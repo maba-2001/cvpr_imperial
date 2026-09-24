@@ -21,7 +21,7 @@ tol = 1e-5 asks for exact agreement; tol = one 10-bit bin (~1e-3) for
 approximate. "gt_quantized" scores the ground truth snapped to the
 quantisation grid: the ceiling for the quant head.
 
-    CVPR_VERTEX_MODE=quant python -m cvpr_imperial.eval_vertices --n 256
+    CVPR_VERTEX_MODE=quant python -m cvpr_imperial.scripts.eval_vertices --n 256
 """
 
 from __future__ import annotations
@@ -32,11 +32,11 @@ import itertools
 import numpy as np
 import torch
 
-from . import code as C
-from . import config as cfg
-from .data import CodeDataset, collate
-from .topology_model import CodeTransformer
-from .vertex_head import dequantize, quantize
+from ..topology import grammar as C
+from .. import config as cfg
+from ..data.dataset import CodeDataset, collate
+from ..topology.model import CodeTransformer
+from ..geometry.vertex_head import dequantize, quantize
 
 TOLS = (1e-5, 1.0 / 2 ** cfg.VERTEX_BITS)
 GT_EQ = 1e-7

@@ -1,7 +1,7 @@
 """Quick-look wireframe PNGs of sampled shapes (straight edges, no curvature
 fitting -- just vertex positions from the geometry flow joined per CMap edge).
 
-    python -m cvpr_imperial.viz_wireframe --n 6
+    python -m cvpr_imperial.scripts.viz_wireframe --n 6
 """
 
 from __future__ import annotations
@@ -14,12 +14,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from . import config as cfg
-from .frame import from_deviation
-from .geometry_model import DIMS, GeometryFlow
-from .geometry_vae import load_vaes
-from .realize import realize
-from .topology_model import CodeTransformer, sample
+from .. import config as cfg
+from ..geometry.frame import from_deviation
+from ..geometry.flow import DIMS, GeometryFlow
+from ..geometry.vae import load_vaes
+from ..geometry.realize import realize
+from ..topology.model import CodeTransformer, sample
 
 
 def edge_curves(m, geom: dict) -> list[np.ndarray]:

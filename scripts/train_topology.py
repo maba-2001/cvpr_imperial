@@ -1,6 +1,6 @@
 """Train the canonical-code model.
 
-    python -m cvpr_imperial.train_topology --steps 40000 --batch 16
+    python -m cvpr_imperial.scripts.train_topology --steps 40000 --batch 16
 """
 
 from __future__ import annotations
@@ -11,9 +11,9 @@ import time
 import torch
 from torch.utils.data import DataLoader
 
-from . import config as cfg
-from .data import CodeDataset, collate
-from .topology_model import CodeTransformer, sample
+from .. import config as cfg
+from ..data.dataset import CodeDataset, collate
+from ..topology.model import CodeTransformer, sample
 
 
 def make_scheduler(opt, kind: str, lr: float, steps: int, warmup_frac: float = 0.03):

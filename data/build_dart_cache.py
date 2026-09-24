@@ -15,21 +15,18 @@ per-edge local frame, the loop-nesting check) to handle a chord of 0 or a
 periodic domain. `extract.py` (geometry) must see the same split shape as
 this (topology), so both call through this same normalization.
 
-    python -m cvpr_imperial.build_dart_cache --dataset fusion360
+    python -m cvpr_imperial.data.build_dart_cache --dataset fusion360
 """
 
 from __future__ import annotations
 
 import argparse
 import multiprocessing as mp
-import sys
 import time
 
 import numpy as np
 
-from . import config as cfg
-
-sys.path.insert(0, str(cfg.ROOT / "src/imperial/dartbrep"))
+from .. import config as cfg
 
 
 def _one(args: tuple[str, str]) -> tuple[str, str, int]:
@@ -38,7 +35,7 @@ def _one(args: tuple[str, str]) -> tuple[str, str, int]:
     out_path = ds["dart_cache"] / f"{fid}.npz"
     if out_path.exists():
         return fid, "skip", 0
-    from extract_darts import DartExtractionError, extract_map
+    from .extract_darts import DartExtractionError, extract_map
 
     from .normalize import read_step_normalized
 

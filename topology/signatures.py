@@ -1,10 +1,10 @@
 """Exact canonical-code signatures of the training set, for novelty/memorisation
 at evaluation time (see evaluate.py).
 
-Training *data* uses `code.quick_encode` -- a cheap, non-canonical walk, fine
+Training *data* uses `grammar.quick_encode` -- a cheap, non-canonical walk, fine
 because the model only needs one consistent target per shape. Checking whether
 a generated shape's topology already exists in training data needs the
-isomorphism-invariant `code.canonical` instead, which is worst-case expensive
+isomorphism-invariant `grammar.canonical` instead, which is worst-case expensive
 on highly symmetric parts (a plate with dozens of identical mounting holes has
 dozens of interchangeable roots and ties at every step). `canonical` bounds
 itself with an internal wall-clock deadline (checked only between Python-level
@@ -14,7 +14,7 @@ cleanly), so a handful of such outliers degrade to a merely-deterministic
 (not guaranteed isomorphism-exact) code instead of blocking the build; that
 count is reported, not hidden.
 
-    python -m cvpr_imperial.build_train_signatures
+    python -m cvpr_imperial.topology.signatures
 """
 
 from __future__ import annotations
@@ -24,9 +24,9 @@ import time
 
 import numpy as np
 
-from . import code as C
-from . import config as cfg
-from .data import load_map, split_ids, _types_of
+from . import grammar as C
+from .. import config as cfg
+from ..data.dataset import load_map, split_ids, _types_of
 
 
 def _signature_of(fid: str):

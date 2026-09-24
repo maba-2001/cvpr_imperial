@@ -20,8 +20,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from . import config as cfg
-from .cmap import CMap
+from .. import config as cfg
+from ..data.cmap import CMap
 from .frame import from_deviation
 
 

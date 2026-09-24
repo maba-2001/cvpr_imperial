@@ -1,33 +1,14 @@
-"""The representation: an oriented combinatorial map with a face partition.
+"""The representation: an oriented combinatorial map with a face partition,
+`M = (D, alpha, phi, Phi)`. See the README's "The representation" section for
+what each symbol means and why tier-0 validity is a theorem, not a check.
 
-A B-rep shell is  M = (D, alpha, phi, Phi)  where
+sigma = phi o alpha (rotation about a dart's origin vertex). Cells are
+orbits: vertices = orbits(sigma), edges = orbits(alpha), loops = orbits(phi),
+faces = blocks of Phi -- so `check` has nothing to verify at tier 0, it is a
+regression guard, not a filter.
 
-    D      darts (coedges): one traversal of one edge by one loop
-    alpha  fixed-point-free involution pairing the two uses of an edge
-    phi    permutation whose orbits are the loops (wires)
-    Phi    partition of loops into B-rep faces
-
-and  sigma = phi o alpha  is the rotation around a dart's origin vertex.
-Cells are orbits: vertices = orbits(sigma), edges = orbits(alpha),
-loops = orbits(phi), faces = blocks of Phi.
-
-Everything the penalty-based formulations enforce approximately is a theorem
-here:
-
-    loop closure          orbits of a permutation are cycles
-    edge used twice       alpha is an involution
-    opposite orientation  alpha is fixed-point free; the map is oriented
-    vertex manifoldness   the link of a vertex IS its sigma-orbit, one cycle
-    wire cyclic order     the phi-orbit, read off directly
-
-so `check` has nothing left to verify at tier 0 -- it is a regression guard,
-not a filter. The genuinely contingent facts live at tiers 1-3.
-
-Euler characteristic of the realized surface S (faces are l-holed spheres,
-not disks):   chi(S) = V - E + 2F - L.
-Derivation: capping every loop with a disk gives the map's surface S_map with
-chi = V - E + L; replacing the l caps of a face by one l-holed sphere changes
-chi by (2 - l) - l, and summing 2 - 2*l_f over faces gives 2F - 2L.
+Euler characteristic of the realized surface (faces are l-holed spheres, not
+disks): chi(S) = V - E + 2F - L.
 """
 
 from __future__ import annotations

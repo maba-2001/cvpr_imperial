@@ -8,7 +8,7 @@ expressive as the representation and no more.
 
 The decoder is a rectified flow over per-cell geometry -- vertex positions,
 sampled edge curves, sampled face surfaces -- conditioned on those cell
-embeddings. Cells are ordered canonically by `code.canonical`, so, as in
+embeddings. Cells are ordered canonically by `grammar.canonical`, so, as in
 stage 1, there is no set-matching problem to solve.
 
 Batching across maps of different sizes follows PyTorch Geometric's graph-
@@ -26,8 +26,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from . import code as C
-from . import config as cfg
+from ..topology import grammar as C
+from .. import config as cfg
 from .vertex_head import FourierEmbed
 
 DIMS = {"v": 3, "e": (cfg.N_CURVE_SAMPLES - 2) * 3 + 1, "f": cfg.N_SURF_GRID ** 2 * 3}
@@ -464,7 +464,7 @@ class GeometryFlow(nn.Module):
         self.ranks = ranks
         self.vertex_cond = vertex_cond
         # vaes: optional {rank: CellVAE}, frozen, one per latent rank (see
-        # geometry_vae.py) -- when given, the flow matches each such rank's
+        # geometry/vae.py) -- when given, the flow matches each such rank's
         # *latent* (mu of the VAE's posterior) instead of its raw geometry;
         # ranks absent from `vaes` (vertices, always) still flow on raw xyz.
         self.vaes = nn.ModuleDict(vaes) if vaes else None

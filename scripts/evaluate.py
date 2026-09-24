@@ -8,13 +8,13 @@ The validity ladder is explicit and tiered, so "valid" cannot quietly mean
 number that is 100% by construction is a claim the reader can check.
 
 Novelty and uniqueness are exact. Two generated shapes have the same topology
-iff their canonical codes are equal (`code.code_key`), so memorisation is a set
+iff their canonical codes are equal (`grammar.code_key`), so memorisation is a set
 lookup, not a quantised geometry hash.
 
 Conditioning accuracy is exact too: the requested genus and face count are
 compared against the invariants computed from the sample itself.
 
-    python -m cvpr_imperial.evaluate --n 512 --geometry
+    python -m cvpr_imperial.scripts.evaluate --n 512 --geometry
 """
 
 from __future__ import annotations
@@ -25,20 +25,20 @@ from collections import Counter, defaultdict
 import numpy as np
 import torch
 
-from . import code as C
-from . import config as cfg
-from .topology_model import CodeTransformer, sample
+from ..topology import grammar as C
+from .. import config as cfg
+from ..topology.model import CodeTransformer, sample
 
 
 def train_code_set() -> set:
     """Canonical (isomorphism-invariant) codes of the training set -- built by
-    `build_train_signatures.py`, separately from `codes_train.npz` (the
+    `topology/signatures.py`, separately from `codes_train.npz` (the
     `quick_encode`-based training *data*, which is not comparable to the
     `code_key` values generated maps are checked against here)."""
     path = cfg.RUN_DIR / "train_signatures.npz"
     if not path.exists():
         raise FileNotFoundError(
-            f"{path} missing -- run `python -m cvpr_imperial.build_train_signatures`")
+            f"{path} missing -- run `python -m cvpr_imperial.topology.signatures`")
     blob = np.load(path, allow_pickle=True)
     return {tuple(int(x) for x in k) for k in blob["keys"]}
 
@@ -75,7 +75,7 @@ def geometry_report(samples: list, flow, device: str, chunk: int = 64) -> dict:
     is sampled in batches (see `GeometryFlow.sample_batch`), not one map at a
     time -- `realize()` still runs per-sample since it's a CPU routine with
     no batched form."""
-    from .realize import realize
+    from ..geometry.realize import realize
 
     rep = Counter()
     by_faces = defaultdict(list)
@@ -127,8 +127,8 @@ def main() -> None:
             print(f"  {k:14s} {v:.3f}" if isinstance(v, float) else f"  {k:14s} {v}")
 
     if args.geometry:
-        from .geometry_model import DIMS, GeometryFlow
-        from .geometry_vae import load_vaes
+        from ..geometry.flow import DIMS, GeometryFlow
+        from ..geometry.vae import load_vaes
         flow = GeometryFlow.load(cfg.RUN_DIR / "geometry.pt",
                                  load_vaes(cfg.RUN_DIR, DIMS, args.device), args.device)
         g = geometry_report(samples, flow, args.device)

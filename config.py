@@ -1,14 +1,11 @@
 """Paths, capacities and hyperparameters.
 
-Dataset: Fusion360 (the Fusion 360 Gallery reconstruction dataset), not
-MFCAD++. MFCAD++ is a machining-feature *segmentation* benchmark -- fine for
-de-risking the pipeline (data.py._stats, the smoke tests in the README), but
-not an appropriate target for a generative B-rep paper. Fusion360 parts are
-real designed CAD, which is what a reviewer expects to see samples of.
+Default dataset is Fusion360 (real designed CAD), not MFCAD++ (a machining-
+feature segmentation benchmark, useful only for pipeline smoke tests).
 
-Capacities are p99 of the Fusion360 dart cache (`python -m cvpr_imperial.data
---stats --dataset fusion360`). Nothing here is a validity knob: validity is
-structural, not thresholded -- these only bound the sequence/model shapes.
+Capacities below are p99 over the Fusion360 dart cache
+(`python -m cvpr_imperial.data.dataset --stats`) with margin; none of them
+are validity knobs -- validity is structural, not thresholded.
 """
 
 import os
@@ -65,7 +62,7 @@ GEOM_CACHE = DATASETS[DATASET]["geom_cache"]
 MFCAD_DIR = DATASETS["mfcad++"]["root"]
 
 # ---- capacities (sequence model) ----
-# Fusion360 p99 over a 5k-model sample (data.py --stats): darts 494 (max
+# Fusion360 p99 over a 5k-model sample (data/dataset.py --stats): darts 494 (max
 # 1568), loop length 49 (max 80), loops per face 11 (max 21). MAX_DARTS is
 # the binding cutoff -- parts above it are skipped by the loader; everything
 # else follows from that with margin.
@@ -75,7 +72,7 @@ MAX_FACES = 192
 MAX_LOOPS = 256
 MAX_LOOPS_PER_FACE = 32    # inner loops of one face
 # quick_encode token count, p99 1163 / max 1436 over the same sample --
-# measured AFTER adding FACE_TYPE/EDGE_TYPE/LOOP_IS_OUTER (code.py), which
+# measured AFTER adding FACE_TYPE/EDGE_TYPE/LOOP_IS_OUTER (topology/grammar.py), which
 # roughly doubled tokens-per-structural-unit (a dart now costs an ALPHA +
 # EDGE_TYPE pair, not one token; likewise LEN+LOOP_IS_OUTER per loop and
 # NLOOPS+FACE_TYPE per face) versus the topology-only grammar this was

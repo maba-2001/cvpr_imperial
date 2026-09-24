@@ -10,7 +10,7 @@ encoder/decoder is the direct equivalent, not a simplification of substance.
 Vertices are left un-latent (raw xyz, flowed on directly): they're already
 3 numbers, so a VAE would only add reconstruction error, not compression.
 
-    python -m cvpr_imperial.train_geometry_vae --steps 4000
+    python -m cvpr_imperial.scripts.train_geometry_vae --steps 4000
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 
-from . import config as cfg
+from .. import config as cfg
 
 
 class CellVAE(nn.Module):

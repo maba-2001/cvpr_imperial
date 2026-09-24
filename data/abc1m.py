@@ -14,7 +14,7 @@ incompatibility rather than one missing line. It isn't: appending it
 loads cleanly, verified against 100+ sampled rows and the dataset's own
 worked example in the OCCT spec.
 
-    python -m cvpr_imperial.abc1m --split train --download 4
+    python -m cvpr_imperial.data.abc1m --split train --download 4
 
 Storage policy: a parquet shard is only ever a transient download. Once its
 rows are unpacked to `step/{split}/{stem}.brep` and extracted into
@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import argparse
 
-from . import config as cfg
+from .. import config as cfg
 
 
 def fix_brep(raw: bytes) -> bytes:
@@ -168,22 +168,19 @@ def build_dart_cache(split: str) -> None:
     """Process every locally-downloaded shard of a split: unpack each row's
     fixed `.brep` bytes to `step/{split}/{stem}.brep`, extract (phi, alpha,
     cell geometry) into `dart_cache/{stem}.npz` (the same cache format
-    `build_dart_cache.py` uses for the other datasets, so `data.py`/
+    `build_dart_cache.py` uses for the other datasets, so `data/dataset.py`/
     everything downstream treats 'abc1m' as just another `config.DATASETS`
     entry), then delete the shard and record it in `{split}_shards.txt`.
     Finally rewrites `{split}.txt` from the dart_cache's actual contents
     (not just this run's), since a full listing must survive across
     incremental calls that each only download a few shards.
     """
-    import sys
     import time
 
     import numpy as np
 
+    from .extract_darts import DartExtractionError, extract_map
     from .normalize import normalize_shape
-
-    sys.path.insert(0, str(cfg.ROOT / "src/imperial/dartbrep"))
-    from extract_darts import DartExtractionError, extract_map
 
     ds = cfg.DATASETS["abc1m"]
     ds["dart_cache"].mkdir(parents=True, exist_ok=True)
@@ -222,7 +219,7 @@ def build_dart_cache(split: str) -> None:
     # directory shared by all splits, so globbing it would fold other
     # splits' stems in); intersect with dart_cache so a row whose .brep was
     # unpacked but failed extraction doesn't end up in {split}.txt with no
-    # matching .npz for data.py to load.
+    # matching .npz for data/dataset.py to load.
     split_stems = {p.stem for p in step_split_dir.glob("*.brep")}
     cached_stems = {p.stem for p in ds["dart_cache"].glob("*.npz")}
     stems = sorted(split_stems & cached_stems)

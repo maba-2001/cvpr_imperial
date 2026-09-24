@@ -1,35 +1,19 @@
 """STEP -> combinatorial map + per-cell geometry.
 
-The map itself comes from `src/imperial/dartbrep/extract_darts.py`, which is
-reused unchanged (it already extracts phi from ordered wire traversal and alpha
-from the radial edge structure). This module adds what generation needs and
-classification did not: per-edge geometry and sampled face surfaces.
+The map comes from `extract_darts.py` (vendored, unchanged). This module adds
+what generation needs: per-edge curve samples, sampled face surfaces, and
+primitive/outer-loop labels.
 
-Edges are stored as `N_CURVE_SAMPLES - 2` interior samples plus one scalar
-`delta` -- the two endpoint samples are dropped, because they are exactly the
-edge's two vertex positions (already generated at the vertex rank), and
-storing them again is what caused an earlier bug: a predicted sample
-inconsistent with the predicted vertex it should coincide with produced a
-degenerate zero-length edge at realization. Samples are first resampled at
-uniform *arc length* (`_sample_curve_arclength`), so the same shape gives the
-same target however the CAD kernel parameterized it (analytic arc or spline)
-and a straight line's samples land exactly on its chord. Each interior
-sample is then stored as its world-axis deviation from the chord point at
-the same arc fraction, divided by `D = c + delta` (`frame.to_deviation`): `c`
-is the chord length, already known from the two endpoints; `delta` is how
-far the curve reaches beyond its chord, 0 for every line and every arc up to
-a semicircle and only nonzero (up to the circle's own size) for a closed or
-near-closed edge. `delta`, not chord length, is the scalar that has to be
-predicted -- it is bounded (measured max |deviation| 0.997 over the v2
-cache) where chord-relative scaling blows up (worst case 1e12x the chord) at
-exactly the closed edges Phi's multi-loop faces need. See `frame.py` for why
-this replaced an earlier local-frame + arc-length-scale representation.
-Realization (`realize.py`) hands the reconstructed samples to
-`GeomAPI_PointsToBSpline`, the same multi-span fit `src/imperial/brepcomplex`
-used, so a closed loop is free to look like a closed loop rather than being
-forced into a single curve segment that cannot represent one.
+Edges are stored as `N_CURVE_SAMPLES - 2` interior samples (endpoints dropped
+-- they're exactly the vertex positions stage 2 already generates) plus one
+scalar `delta`, in the chord-deviation representation `geometry/frame.py`
+documents: resample at uniform arc length, store each sample's world-axis
+deviation from the chord at the same arc fraction, divide by `D = c + delta`.
+See `frame.py` for why (bounded even for closed edges, where chord-relative
+scaling blows up) and the README's "Edge and face geometry" section for the
+measured numbers.
 
-    python -m cvpr_imperial.extract --n 20000 --workers 32
+    python -m cvpr_imperial.data.extract --n 20000 --workers 32
 """
 
 from __future__ import annotations
@@ -41,9 +25,9 @@ import time
 
 import numpy as np
 
-from . import config as cfg
+from .. import config as cfg
 from .cmap import from_arrays, reindex_cells
-from .frame import to_deviation
+from ..geometry.frame import to_deviation
 
 def _sample_curve_arclength(edge, n: int, n_fine: int = 400) -> np.ndarray:
     """(n, 3) points along the edge, uniformly spaced in *arc length* (not

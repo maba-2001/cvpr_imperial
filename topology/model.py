@@ -1,41 +1,29 @@
 """Stage 1: autoregressive model of the canonical code, plus the vertex block.
+See the README's "canonical code" and "vertex block" sections for the design
+rationale; this is the mechanism.
 
-A causal transformer over the token stream of `code.py`, with six heads --
+A causal transformer over the token stream of `grammar.py`, with six heads --
 NLOOPS, LEN, FACE_TYPE, EDGE_TYPE, LOOP_IS_OUTER (plain classification) and a
-pointer head for ALPHA that attends over the darts that are currently open.
-FACE_TYPE, EDGE_TYPE and LOOP_IS_OUTER ride along at the same fixed points in
-the walk that already determine topology (see `code.py`'s module docstring),
-so this model learns the statistical grammar of (topology, primitive type,
-outer/inner role) jointly -- a box's "perpendicular planar faces" pattern, or
-"this loop is the hole, not the boundary" is representable directly in the
-token stream it imitates, not left for stage 2 alone to rediscover from
-geometry. Sampling runs `code.Builder` alongside the model and masks the
-logits to the grammar, so every sample decodes to a closed, connected,
-orientable 2-manifold map. Validity is therefore not a metric of this model;
-it is a property of its output space.
+pointer head for ALPHA that attends over the darts currently open. Sampling
+runs `grammar.Builder` alongside the model and masks the logits to the
+grammar, so every sample decodes to a closed, connected, orientable
+2-manifold map -- validity is a property of the output space, not a metric
+of this model.
 
-Vertex block (cfg.VERTEX_MODE): after the topology, one VERTEX token per
-vertex, in the decoded map's own vertex order (σ-orbits numbered by first
-dart in walk order, so the order is a function of the prefix -- no stop
-token, nothing to learn about ordering). Stage 2 then only has to generate
-edge and face geometry, conditioned on these vertices.
-
-  * After the topology, not interleaved into it: a vertex's identity (its
-    σ-orbit) isn't settled when its first dart is emitted -- two partial
-    orbits can merge at a later ALPHA closure -- so an interleaved vertex
-    token couldn't be tied to one vertex exactly. Appending gives
-    p(T) p(V | T), with every vertex's full incidence known when it's placed.
-  * Each vertex token carries a structural slot: the mean positional
-    embedding of the ALPHA tokens of its incident darts. It is added at the
-    position that predicts the vertex (so attention can retrieve exactly that
-    vertex's incidence context) and to the vertex's content embedding (so
-    later vertices can see which vertex was placed where).
-
+Vertex block (`cfg.VERTEX_MODE`): after the topology, one VERTEX token per
+vertex, in the decoded map's own order (σ-orbits numbered by first dart in
+walk order -- a function of the prefix, so no ordering to learn). Appended
+rather than interleaved: a vertex's identity isn't settled until its last
+incident dart closes, so an interleaved token couldn't be tied to one vertex
+exactly. Each vertex token carries a *structural slot* -- the mean
+positional embedding of its incident darts' ALPHA tokens -- added both at the
+position that predicts it (so attention can retrieve its incidence context)
+and to its own content embedding (so later vertices can see where it landed).
 The per-token distribution is `vertex_head.make_head(cfg.VERTEX_MODE)`.
 
 Conditioning is (genus, n_faces) with classifier-free guidance. n_faces is
-exact by construction (it is the number of face groups emitted); genus is
-verified exactly and for free by `CMap.invariants`.
+exact by construction (the number of face groups emitted); genus is verified
+exactly and for free by `CMap.invariants`.
 """
 
 from __future__ import annotations
@@ -47,10 +35,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from . import code as C
-from . import config as cfg
-from .cmap import CMap
-from .vertex_head import make_head
+from . import grammar as C
+from .. import config as cfg
+from ..data.cmap import CMap
+from ..geometry.vertex_head import make_head
 
 
 class TopoSample(NamedTuple):

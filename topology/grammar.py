@@ -1,21 +1,8 @@
 """Canonical code: one object that is simultaneously the canonical labelling,
-the isomorphism test, and the generation order.
-
-A rooted oriented map has a unique labelling: walk it from the root and number
-darts in discovery order. Taking the lexicographic minimum over an
-invariantly-chosen candidate root set gives
-
-    code_key(M) == code_key(M')   iff   M ~= M'
-
-and that same integer sequence is the token stream the autoregressive model is
-trained on. Set prediction with Hungarian matching is therefore unnecessary:
-there is nothing to match, the order is a property of the object.
-
-The walk is face-major, because (alpha, phi) alone is *disconnected* on real
-B-reps: a pocket reaches the plate it sits in only through the inner loop of
-the plate's top face, i.e. through Phi. Emitting all loops of a face together
-both restores connectivity of the walk and makes Phi implicit -- the face
-partition is the block structure, never a separate prediction.
+the isomorphism test, and the generation grammar. See the README's "canonical
+code" and "vertex block" sections for the design rationale (why face-major,
+why FACE_TYPE/EDGE_TYPE/LOOP_IS_OUTER ride along in the walk, why
+LOOP_IS_OUTER also steers `preview`'s tie-break); this file is the mechanism.
 
 Grammar (one group per face, faces in discovery order):
 
@@ -27,39 +14,17 @@ Grammar (one group per face, faces in discovery order):
                                       i-j = close currently-open dart j
                           EDGE_TYPE t  this dart's edge kind (line/circle/other)
 
-FACE_TYPE, EDGE_TYPE and LOOP_IS_OUTER ride along at fixed points in the same
-walk that already determines topology -- one token per face, per dart, and
-per loop respectively -- so the statistical grammar the model imitates is
-over (topology, primitive type, outer/inner role) jointly, not topology
-alone. None of these are a late annotation: they participate in
-`preview`/`emit`'s token tuples exactly like LEN/ALPHA, so two candidates
-that are topologically tied but differ in surface/edge kind or outer/inner
-role are correctly told apart during canonicalization, not silently merged.
-An edge's two darts get the same EDGE_TYPE value by construction while
-encoding (both read `edge_type[edge_of_dart[d]]`); nothing forces a
-*sampled* sequence to agree at both darts, so `decode` resolves a
-disagreement by taking whichever was emitted last -- a rare, ungraceful
-fallback, not a validity requirement (type never affects grammar legality,
-unlike ALPHA's pointer consistency).
-
-Outer-vs-inner isn't decidable from topology alone -- two loops of one face
-are, as abstract cycles, interchangeable; "outer" only means something once
-an embedding says one loop encloses the rest, which is exactly what
-`loop_is_outer` (computed once, geometrically, by the extraction that built
-this training example) supplies. LOOP_IS_OUTER also steers `preview`'s
-comparison key (its value sorts first, ahead of loop length), so whenever
-the walk is genuinely free to choose which of a face's remaining loops to
-emit next, the outer one comes first -- a predictable convention for the
-model to learn, not an emergent artifact of minimality over LEN/ALPHA alone.
-This can't be a hard rule throughout: the forced BFS entry into a face
-(below) sometimes lands on an inner loop, whichever one the connecting edge
-happens to reach, and that choice isn't negotiable.
-
 The first dart of the entry loop of every face after the first is forced to
-close the earliest open dart. That is what makes the walk breadth-first, makes
-the result connected by construction, and makes termination structural: the
-code ends exactly when a face group leaves no dart open. There is no stop
-token to get wrong, and no complete sequence decodes to an invalid map.
+close the earliest open dart -- makes the walk breadth-first, makes the
+result connected by construction, and makes termination structural: the code
+ends exactly when a face group leaves no dart open, so there is no stop token
+to get wrong and no complete sequence decodes to an invalid map.
+
+An edge's two darts get the same EDGE_TYPE value by construction while
+encoding; nothing forces a *sampled* sequence to agree at both, so `decode`
+resolves a disagreement by taking whichever was emitted last (type never
+affects grammar legality, unlike ALPHA's pointer consistency, so this is a
+rare cosmetic fallback, not a validity concern).
 """
 
 from __future__ import annotations
@@ -68,7 +33,7 @@ import time
 
 import numpy as np
 
-from .cmap import CMap
+from ..data.cmap import CMap
 
 NLOOPS, LEN, ALPHA, FACE_TYPE, EDGE_TYPE, LOOP_IS_OUTER = 0, 1, 2, 3, 4, 5   # token kinds
 OPEN = 0                            # ALPHA value meaning "partner comes later"
@@ -76,7 +41,7 @@ N_FACE_TYPES = 6                    # plane, cylinder, cone, sphere, torus, othe
 N_EDGE_TYPES = 3                    # line, circle, other
 N_LOOP_IS_OUTER = 2                 # inner (0), outer (1)
 # One token per vertex, appended after the topology is complete (see
-# topology_model.py) -- not part of the Builder grammar above: vertex count
+# topology/model.py) -- not part of the Builder grammar above: vertex count
 # and order are fully determined by the finished map, so there is nothing
 # for the grammar to constrain.
 VERTEX = 6

@@ -1,11 +1,11 @@
 """Pretrain the per-edge / per-face geometry VAEs that `train_geometry.py`'s
 GeometryFlow then flow-matches on in latent space instead of raw geometry
-(see `geometry_vae.py`). Cell-level, not map-level: every edge/face across
+(see `geometry/vae.py`). Cell-level, not map-level: every edge/face across
 every cached shape is one training example, independent of which map it
 came from.
 
-    python -m cvpr_imperial.train_geometry_vae --steps 4000
-    python -m cvpr_imperial.train_geometry --steps 8000   # then picks these up
+    python -m cvpr_imperial.scripts.train_geometry_vae --steps 4000
+    python -m cvpr_imperial.scripts.train_geometry --steps 8000   # then picks these up
 """
 
 from __future__ import annotations
@@ -17,9 +17,9 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-from . import config as cfg
-from .geometry_model import DIMS, RANKS
-from .geometry_vae import VAE_LATENT, CellVAE, kl_loss
+from .. import config as cfg
+from ..geometry.flow import DIMS, RANKS
+from ..geometry.vae import VAE_LATENT, CellVAE, kl_loss
 
 
 class CellDataset(Dataset):
