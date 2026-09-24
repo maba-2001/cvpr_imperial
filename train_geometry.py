@@ -35,10 +35,11 @@ class GeomDataset(Dataset):
         m = from_arrays(d["alpha"], d["phi"], d["face_of_dart"])
         geom = {r: torch.from_numpy(d[k].reshape(len(d[k]), -1).astype(np.float32))
                 for r, k in zip(RANKS, ("vertex_xyz", "edge_curve", "face_surface"))}
-        # arc length is a genuinely free scalar per edge (unlike chord length,
-        # not recoverable from the two endpoint vertices), appended as an
-        # extra feature -- see geometry_model.DIMS.
-        geom["e"] = torch.cat([geom["e"], torch.from_numpy(d["edge_length"][:, None])], dim=1)
+        # delta (how far the curve reaches beyond its chord) is the one scalar
+        # not recoverable from the two endpoint vertices -- 0 for lines and
+        # arcs up to a semicircle -- appended as an extra feature; see
+        # geometry_model.DIMS and frame.py.
+        geom["e"] = torch.cat([geom["e"], torch.from_numpy(d["edge_delta"][:, None])], dim=1)
         # edge_type/face_type are already one-hot in `m`'s own numbering
         # (extract.py reindexes them); MapEncoder wants the class index.
         # loop_is_outer is already a plain 0/1 class index, not one-hot.

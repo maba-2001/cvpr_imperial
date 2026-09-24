@@ -27,13 +27,13 @@ class CellDataset(Dataset):
 
     def __init__(self, files: list, rank: str):
         key = {"e": "edge_curve", "f": "face_surface"}[rank]
-        len_key = "edge_length" if rank == "e" else None
+        delta_key = "edge_delta" if rank == "e" else None
         rows = []
         for f in files:
             d = np.load(f)
             arr = d[key].reshape(len(d[key]), -1).astype(np.float32)
-            if len_key is not None:
-                arr = np.concatenate([arr, d[len_key][:, None].astype(np.float32)], axis=1)
+            if delta_key is not None:
+                arr = np.concatenate([arr, d[delta_key][:, None].astype(np.float32)], axis=1)
             rows.append(arr)
         self.data = torch.from_numpy(np.concatenate(rows, axis=0))
 
