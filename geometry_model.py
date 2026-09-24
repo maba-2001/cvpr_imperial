@@ -1,10 +1,7 @@
 """Stage 2: geometry conditioned on a map.
 
-Message passing on a combinatorial map is a gather along a permutation. There
-are no adjacency matrices to build, no degree normalisation to choose and no
-sign conventions to get wrong: a dart's neighbours are alpha(d), phi(d),
-phi^-1(d), sigma(d), and its face. That is the whole structural encoder.
-
+Message passing on a combinatorial map is a gather along a permutation: a
+dart's neighbours are alpha(d), phi(d), phi^-1(d), sigma(d), and its face.
 Cell features are pooled from darts over their orbits (vertex = sigma-orbit,
 edge = alpha-orbit, face = the face block), so the encoder is exactly as
 expressive as the representation and no more.
@@ -14,13 +11,13 @@ sampled edge curves, sampled face surfaces -- conditioned on those cell
 embeddings. Cells are ordered canonically by `code.canonical`, so, as in
 stage 1, there is no set-matching problem to solve.
 
-Batching across maps of different sizes (the actual point of this module)
-follows the same trick as PyTorch Geometric's graph batching: darts and cells
-of every map in the batch are concatenated with per-map index offsets, so a
-cell id stays globally unique across the whole batch and gather/scatter-mean
-message passing needs no further changes at all -- see `map_tensors_batch`.
-Only the flow's attention (which must not let one map's tokens attend to
-another's) needs an explicit pad + key-padding-mask step, built by `_pad`.
+Batching across maps of different sizes follows PyTorch Geometric's graph-
+batching trick: darts and cells of every map are concatenated with per-map
+index offsets, so a cell id stays globally unique across the batch and
+gather/scatter-mean message passing needs no further changes -- see
+`map_tensors_batch`. Only the flow's attention (which must not let one map's
+tokens attend to another's) needs an explicit pad + key-padding-mask step,
+built by `_pad`.
 """
 
 from __future__ import annotations
@@ -443,18 +440,14 @@ class EGNNCoordUpdate(nn.Module):
 class GeometryFlow(nn.Module):
     """Rectified flow over the cells' geometry, conditioned on the map.
 
-    `boundary_gather`: a face token's only route to its boundary edges'
-    *current* geometry is the DiT blocks' dense self-attention over every
-    cell in the map -- unstructured and undifferentiated, no signal for
-    which edges are this face's own boundary versus some other face's.
-    Measured effect: generated edges sit ~0.5-0.6 units from their own
-    face's fitted surface, on a face that only spans ~0.1 units itself
+    `boundary_gather`: dense self-attention over every cell gives a face
+    token no explicit signal for which edges are its own boundary versus
+    another face's. Measured effect: generated edges sit ~0.5-0.6 units from
+    their own face's fitted surface, on a face spanning only ~0.1 units
     (see realize.py's face-trim collapse). When true, this adds an explicit
     structural gather mirroring `MapConv.face` -- scatter-mean each face's
-    boundary darts' current edge tokens into its own token, every flow
-    step -- the same hard-gather-not-soft-attention fix HiDiGen and the KCP
-    particle paper use for the analogous problem. Kept togglable for the
-    A/B comparison against the baseline before committing to a full retrain.
+    boundary darts' current edge tokens into its own token, every flow step.
+    Kept togglable for A/B comparison against the baseline.
     """
 
     def __init__(self, d: int = cfg.GEOM_DIM, boundary_gather: bool = True,
